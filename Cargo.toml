@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 num = "0.4.3"
 png = "0.17.14"
+rayon = "1.10.0"

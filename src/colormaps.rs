@@ -1,10 +1,4 @@
-use crate::{H, SH, SW, W};
 use num::Complex;
-const CENTER_REAL: f64 = 0.;
-const CENTER_IMAG: f64 = 0.;
-const FOVY: usize = 1;
-const ASPECT_RATIO: f64 = W as f64 / H as f64;
-const HALF_FOVY: f64 = FOVY as f64 / 2.0;
 type Color = [u8; 4];
 
 pub struct ColorMap {
@@ -57,19 +51,12 @@ pub fn lerp_colors(c0: Color, c1: Color, t: f64) -> Color {
     if t >= 1. {
         return c1;
     }
-    let (fr0, fg0, fb0, fa0) = (c0[0] as f64, c0[1] as f64, c0[2] as f64, c0[3] as f64);
-    let (fr1, fg1, fb1, fa1) = (c1[1] as f64, c1[1] as f64, c1[2] as f64, c1[3] as f64);
+    let (fr0, fg0, fb0) = (c0[0] as f64, c0[1] as f64, c0[2] as f64);
+    let (fr1, fg1, fb1) = (c1[1] as f64, c1[1] as f64, c1[2] as f64);
     let r = (fr0 + (fr1 - fr0) * t) as u8;
     let g = (fg0 + (fg1 - fg0) * t) as u8;
     let b = (fb0 + (fb1 - fb0) * t) as u8;
-    let a = (fa0 + (fa1 - fa0) * t) as u8;
-    return [r, g, b, a];
-}
-
-pub fn pixel_coordinates(px: usize, py: usize) -> (f64, f64) {
-    let x = ((px as f64 / (SW - 1) as f64) * 2. - 1.) * ASPECT_RATIO * HALF_FOVY + CENTER_REAL;
-    let y = (((SH - py - 1) as f64 / (SH - 1) as f64) * 2. - 1.) * HALF_FOVY + CENTER_IMAG;
-    return (x, y);
+    return [r, g, b, 255];
 }
 
 use std::collections::HashMap;

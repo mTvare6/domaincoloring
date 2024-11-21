@@ -1,26 +1,38 @@
-#![allow(unused)]
-use num::{Complex};
+use num::Complex;
 use std::fs::File;
 use std::io::BufWriter;
 use std::path::Path;
+use rayon::prelude::*;
 
-const W: usize = 2048;
-const H: usize = 2048;
 const SUPERSAMPLING: usize = 1;
+const FOVY: f64 = 1.0;
+
+const W: usize = 4096;
+const H: usize = 4096;
 const SW: usize = SUPERSAMPLING * W;
 const SH: usize = SUPERSAMPLING * H;
+const CENTER_REAL: f64 = 0.;
+const CENTER_IMAG: f64 = 0.;
+const ASPECT_RATIO: f64 = W as f64 / H as f64;
+const HALF_FOVY: f64 = FOVY / 2.0;
 
 mod colormaps;
 use crate::colormaps::*;
 
-
 fn f(z: Complex<f64>) -> Complex<f64> {
-    return ((z-1.)/(z)).sin().powu(3);
+    return z.finv().sin().finv();
 }
 
+pub fn pixel_coordinates(px: usize, py: usize) -> (f64, f64) {
+    // first part shifts to 2x-1, making 0->-1,1->1, 0.5->0
+    // going from graphical coordinates to cartesian
+    // then it's multiplied and origin is shifted
+    let x = ((px as f64 / (SW - 1) as f64) * 2. - 1.) * ASPECT_RATIO * HALF_FOVY + CENTER_REAL;
+    let y = (((SH - py - 1) as f64 / (SH - 1) as f64) * 2. - 1.) * HALF_FOVY + CENTER_IMAG;
+    return (x, y);
+}
 
 fn main() {
-
     let maps = get_all_color_maps();
     let path = Path::new(r"image.png");
     let file = File::create(path).unwrap();
@@ -44,17 +56,14 @@ fn main() {
     let dx = (x1 - x0) / (SW - 1) as f64;
     let dy = (y1 - y0) / (SH - 1) as f64;
 
-    let mut im = y0;
-    for py in 0..SH {
-        let mut re = x0;
-        for px in 0..SW {
-            let z = f(Complex { re, im });
-            let c = complex_color(z, &maps["inferno"]);
-            let i = 4 * ( py * W + px);
-            data[i..i + 4].copy_from_slice(&c);
-            re += dx;
-        }
-        im += dy
-    }
+
+    data.par_chunks_mut(4).enumerate().for_each(|(i, chunk)| {
+        let py = i/SW;
+        let px = i - py*SW;
+        let z = f(Complex { re: px as f64 * dx + x0, im: py as f64 * dy + y0 });
+        let c = complex_color(z, &maps["inferno"]);
+        chunk.copy_from_slice(&c);
+
+    });
     writer.write_image_data(&data).unwrap();
 }
