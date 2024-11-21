@@ -1,6 +1,7 @@
 use num::Complex;
-type Color = [u8; 4];
+pub type Color = [u8; 4];
 
+#[derive(Clone)]
 pub struct ColorMap {
     map: Vec<Color>,
 }
