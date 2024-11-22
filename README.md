@@ -23,6 +23,6 @@ feh image.png
 ```
 
 # TODO
-[ ] Add custom colormap as hex params
-[ ] Custom symbolic function as parameter
-[ ] Supersampling and scaling
+- [ ] Add custom colormap as hex params
+- [ ] Custom symbolic function as parameter
+- [ ] Supersampling and scaling
